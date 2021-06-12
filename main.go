@@ -13,16 +13,29 @@ func main() {
 		DB: 0,
 	})
 
-	key, value := "Namae", "Uzumaki Naruto"
+	redisCache := NewRedisCache(client)
 	ctx := context.Background()
-	err := client.Set(ctx, key, value, 0).Err()
-	if err != nil {
+
+	key, value := "Namae", "Uzumaki Naruto"
+	if _, err := redisCache.Set(ctx, key, value, 0); err != nil {
 		fmt.Println("Error while setting name in redis: ", err.Error())
 	}
 
-	val, err := client.Get(ctx, key).Result()
-	if err != nil {
-		fmt.Println("Error while fetching name from redis: ", err.Error())
+	val, _ := redisCache.Get(ctx, key)
+	if val == nil {
+		fmt.Println("Invalid key: ", key)
+	} else {
+		fmt.Println(key, " -> ", val)
 	}
-	fmt.Println(key, " -> ", val)
+
+	if err := redisCache.Remove(ctx, key); err != nil {
+		fmt.Printf("unable to remove key: %s from cache\n", key)
+	}
+
+	val, _ = redisCache.Get(ctx, key)
+	if val == nil {
+		fmt.Println("Invalid key: ", key)
+	} else {
+		fmt.Println(key, " -> ", val)
+	}
 }
